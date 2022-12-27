@@ -1,19 +1,20 @@
-import mysql.connector as sql
-from zmq import NULL
+# Importing and Connecting to SQL Database
+import pymysql as sql
 db = sql.connect(
     host='localhost',
     user='admin2077',
     password='Satyam@2005',
-    database='library'
-)
+    database='library')
 mycursor = db.cursor()
+# Login using Username and Password:
 print('Welcome to Epsilon Book Issuing Services!')
 admin = input('Enter Admin Username: ')
 admin_password = input('Enter Admin Password: ')
-
+# Searching for User with matching Username and Password in the Database
 mycursor.execute('SELECT name,admin_id from admins WHERE admin_id="{admin}" AND password="{password}"'.format(
     admin=admin, password=admin_password))
 app_user = mycursor.fetchone()
+# If user is not undefined, start the program
 if(app_user != None):
     print('Welcome %s!' % (app_user[0]))
     while True:
@@ -21,6 +22,7 @@ if(app_user != None):
         act1 = int(input('Enter Your Action: '))
         if(act1 == 1):
             student = input('Enter ID of the Student: ')
+            # Verfying if the Student Id Entered Exists or Not
             mycursor.execute(
                 'SELECT * FROM student WHERE student_id=%s ' % (student))
             issue_student = mycursor.fetchone()
@@ -80,7 +82,7 @@ if(app_user != None):
                             input('Enter Book Code for the book to be Returned: '))
 
                         print("Returning Book...\n")
-                        mycursor.execute("UPDATE TABLE issues SET returned='YES' where student_id='%s' and book_id='%s'" % (
+                        mycursor.execute("UPDATE issues SET returned='YES' where student_id='%s' and book_id='%s'" % (
                             issue_student[0], unissue))
                         db.commit()
                     elif(act2 == 3):
@@ -88,8 +90,6 @@ if(app_user != None):
                             'Genres available: Tech, Science, Non-Fiction, Fiction, Philosophy')
                         genre = input(
                             'Enter the Term You want to Search/Genre You want to Explore: ').lower()
-                        print(
-                            "SELECT * FROM books WHERE genre='{genre}'or book_name like '%{genre}%';" .format(genre=genre))
                         mycursor.execute(
                             "SELECT * FROM books WHERE genre='{genre}'or book_name like '%{genre}%';" .format(genre=genre))
                         list = mycursor.fetchall()
@@ -102,7 +102,7 @@ if(app_user != None):
                 print('No Student with Following Admission Number')
         elif(act1 == 3):
             mycursor.execute(
-                "SELECT * FROM issues where returned!='YES' AND TIMESPAN>NOW()")
+                "SELECT * FROM issues where returned!='YES' AND TIMESPAN<NOW()")
             overdue_books = mycursor.fetchall()
             for x in overdue_books:
                 mycursor.execute(
@@ -111,6 +111,7 @@ if(app_user != None):
                 mycursor.execute(
                     "SELECT * from student where student_id=%s" % x[1])
                 overdue_student = mycursor.fetchone()
+                print('Overdue Books:')
                 print(overdue_book)
                 print('Issue ID:{ID}    Issued To:{Student}     Issued By:{Admin}       Overdue Since:{Date}'.format(
                     ID=x[0], Student=str(overdue_student[1])+' '+str(overdue_student[2]), Admin=x[4], Date=x[5]))
